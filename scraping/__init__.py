@@ -1,3 +1,10 @@
+import requests
+from bs4 import BeautifulSoup
+import nltk
+from nltk.tokenize import sent_tokenize
+
+nltk.download('punkt')
+
 def _split_into_sentences(paragraph):
     sentences = sent_tokenize(paragraph)
     return sentences
@@ -40,3 +47,22 @@ def scrape_drug(id):
         print("No elements with class='drug-label-sections' found.")
     
     return pairs
+
+def chunk(index_name, product_id):
+    try:
+        create_pc_index(index_name)
+    except Exception as e:
+        if int(e.status) != 409:
+            raise e
+
+    pairs = scrape_drug(product_id)
+
+    for pair in pairs:
+        sentences = _split_into_sentences(pair[1])
+        vectors = [embeddings.embedding for embeddings in create_embeddings(sentences)]
+
+        for idx, vector in enumerate(vectors):
+            print(
+                (vector, sentences[idx])
+            )
+            insert_embedding(INDEX_NAME, "certolizumab", pair[0], vector, sentences[idx])
