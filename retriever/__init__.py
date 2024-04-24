@@ -1,4 +1,4 @@
-from oai import oai
+from config import oai
 from generation import create_completions
 
 def create_embeddings(content):
