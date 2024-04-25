@@ -3,30 +3,53 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import nltk
+import tiktoken
 from nltk.tokenize import sent_tokenize
 from retriever import create_embeddings
 from retriever.vdb import create_pc_index, insert_embedding
 
 nltk.download('punkt')
+encoding = tiktoken.get_encoding("cl100k_base")
         
 def write_section_name_set(new_section_names):
     # Get rid of duplicates
     new_section_names = list(set(new_section_names))
 
-    with open("./scraping/section_name_set.json", "r+") as f:
-        section_names = list(json.load(f))
-
-        if section_names == new_section_names:
-            return
-        
+    with open("./scraping/section_name_set.json", "w") as f:
         if not isinstance(new_section_names, list):
             return
         
-        json.dump(new_section_names, f)
+        json.dump({
+            "sections": new_section_names
+        }, f)
 
 def _split_into_sentences(paragraph):
     sentences = sent_tokenize(paragraph)
     return sentences
+
+def split_into_4k_tokens(text):
+    splits_idx = 0
+    counted_token_length = 0
+
+    MAX_CONTENT_LENGTH = 4096
+
+    splits = []
+
+    sentences = _split_into_sentences(text)
+
+    for _, sentence in enumerate(sentences):
+        tokens_in_sentence = len(encoding.encode(sentence))
+
+        if splits_idx == 0 or counted_token_length + tokens_in_sentence > MAX_CONTENT_LENGTH:
+            splits.append(sentence)  # Start a new split
+            splits_idx += 1
+            counted_token_length = tokens_in_sentence  # Reset the count for the new split
+        else:
+            splits[splits_idx - 1] += sentence  # Add the sentence to the current split
+            counted_token_length += tokens_in_sentence  # Update the total token count
+        
+    return splits
+
 
 def scrape_drug(id):
     pairs, section_names = [], []
@@ -81,12 +104,12 @@ def chunk(index_name, product_id):
     pairs = scrape_drug(product_id)
 
     for pair in pairs:
-        sentences = _split_into_sentences(pair[1])
-        vectors = [embeddings.embedding for embeddings in create_embeddings(sentences)]
+        paragraphs = split_into_4k_tokens(pair[1])
+        vectors = [embeddings.embedding for embeddings in create_embeddings(paragraphs)]
 
         for idx, vector in enumerate(vectors):
             print(
-                (vector, sentences[idx])
+                (vector, paragraphs[idx])
             )
             # TODO: Replace second parameter with parsed out product name
-            insert_embedding(index_name, "certolizumab", pair[0], vector, sentences[idx])
+            insert_embedding(index_name, "certolizumab", pair[0], vector, paragraphs[idx])

@@ -27,5 +27,5 @@ def main():
     except Exception as e:
         raise e
 
-# chunk(INDEX_NAME, "b4c2c9dc-a0bb-4d64-a667-a67ebe88392d")
-main()
+chunk(INDEX_NAME, "b4c2c9dc-a0bb-4d64-a667-a67ebe88392d")
+# main()

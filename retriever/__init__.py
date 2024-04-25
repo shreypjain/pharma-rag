@@ -15,7 +15,7 @@ Do not add any notes in parenthesis. Do not mention latest information. Do not t
 
 def read_section_name_set():
     with open("./scraping/section_name_set.json", "r") as f:
-        section_names = list(json.load(f))
+        section_names = list(json.load(f)["sections"])
         if isinstance(section_names, list):
             return section_names
         else:
@@ -24,10 +24,13 @@ def read_section_name_set():
 def create_embeddings(content):
     if not isinstance(content, list):
         content = [content]
-    response = oai.embeddings.create(
-        input=content,
-        model="text-embedding-3-small"
-    )
+    try:
+        response = oai.embeddings.create(
+            input=content,
+            model="text-embedding-3-small"
+        )
+    except Exception as e:
+        raise e
 
     return response.data
 

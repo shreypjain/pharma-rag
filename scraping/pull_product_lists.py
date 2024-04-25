@@ -54,7 +54,3 @@ def parse_product_search(search_url):
     return product_pairs
 
 drugs = parse_drug_classes()
-print(drugs)
-print(len(drugs))
-
-
