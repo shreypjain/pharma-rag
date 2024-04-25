@@ -38,14 +38,15 @@ def split_into_4k_tokens(text):
     sentences = _split_into_sentences(text)
 
     for _, sentence in enumerate(sentences):
-        tokens_in_sentence = len(encoding.encode(sentence))
+        sentence_w_space = " " + sentence
+        tokens_in_sentence = len(encoding.encode(sentence_w_space))
 
         if splits_idx == 0 or counted_token_length + tokens_in_sentence > MAX_CONTENT_LENGTH:
-            splits.append(sentence)  # Start a new split
+            splits.append(sentence_w_space)  # Start a new split
             splits_idx += 1
             counted_token_length = tokens_in_sentence  # Reset the count for the new split
         else:
-            splits[splits_idx - 1] += sentence  # Add the sentence to the current split
+            splits[splits_idx - 1] += sentence_w_space  # Add the sentence to the current split
             counted_token_length += tokens_in_sentence  # Update the total token count
         
     return splits
@@ -94,17 +95,21 @@ def scrape_drug(id):
     
     return pairs
 
-def chunk(index_name, product_id):
+def chunk(index_name, product_name, product_id):
     try:
+        print("Checking / Creating Index")
         create_pc_index(index_name)
     except Exception as e:
         if int(e.status) != 409:
             raise e
 
     pairs = scrape_drug(product_id)
+    print(pairs)
 
     for pair in pairs:
+        print("Splitting into 4k tokens")
         paragraphs = split_into_4k_tokens(pair[1])
+        print("Generating Vectors")
         vectors = [embeddings.embedding for embeddings in create_embeddings(paragraphs)]
 
         for idx, vector in enumerate(vectors):
@@ -112,4 +117,4 @@ def chunk(index_name, product_id):
                 (vector, paragraphs[idx])
             )
             # TODO: Replace second parameter with parsed out product name
-            insert_embedding(index_name, "certolizumab", pair[0], vector, paragraphs[idx])
+            insert_embedding(index_name, product_name, pair[0], vector, paragraphs[idx])

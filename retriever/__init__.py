@@ -24,12 +24,16 @@ def read_section_name_set():
 def create_embeddings(content):
     if not isinstance(content, list):
         content = [content]
+    if not len(content):
+        return []
     try:
         response = oai.embeddings.create(
             input=content,
             model="text-embedding-3-small"
         )
     except Exception as e:
+        print("THIS IS THE CONTENT THAT ERRORED:")
+        print(content)
         raise e
 
     return response.data

@@ -53,4 +53,24 @@ def parse_product_search(search_url):
     
     return product_pairs
 
+def write_drugs_to_file(drugs, filename):
+    with open(filename, 'w') as file:
+        for drug in drugs:
+            # Joining the elements of each tuple with a comma and writing to the file
+            file.write(','.join(drug) + '\n')
+
+def read_drugs_from_file(filename):
+    drugs = []
+    with open(filename, 'r') as file:
+        for line in file:
+            # Split each line into elements separated by commas
+            drug_data = line.strip().split(',')
+            # Assuming each line has two elements: name and ID
+            if len(drug_data) == 2:
+                drugs.append((drug_data[0], drug_data[1]))
+            else:
+                print("Error: Invalid line format:", line)
+    return drugs
+
 drugs = parse_drug_classes()
+write_drugs_to_file(drugs, "drug_list.txt")
