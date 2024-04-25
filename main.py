@@ -1,7 +1,7 @@
 from retriever import retrieve_from_query
 from generation import generate_with_retrieval
 from config import INDEX_NAME
-from scraping import chunk
+from scraping import chunk, write_to_json
 from scraping.pull_product_lists import parse_drug_classes, read_drugs_from_file
 
 def main():
@@ -35,5 +35,6 @@ all_drugs = read_drugs_from_file("./scraping/drug_list.txt")
 for drug in all_drugs:
     product_name, product_id = drug
 
-    chunk(INDEX_NAME, product_name, product_id)
-main()
+    write_to_json(product_name, product_id)
+    # chunk(INDEX_NAME, product_name, product_id)
+

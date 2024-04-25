@@ -95,6 +95,26 @@ def scrape_drug(id):
     
     return pairs
 
+def write_to_json(product_name, product_id):
+    product_name = product_name.replace(" ", "_").replace("\n", "")
+    
+    with open(f"./scraping/drug-information/{product_name}.json", 'w+') as file:
+        pairs = scrape_drug(product_id)
+        drug_json = {
+            "name": product_name,
+            "sections": []
+        }
+
+        # Iterate through pairs and add to sections list
+        for header, content in pairs:
+            section = {"header": header, "content": content}
+            drug_json["sections"].append(section)
+
+        json.dump(drug_json, file)
+    
+    return drug_json, True
+
+
 def chunk(index_name, product_name, product_id):
     try:
         print("Checking / Creating Index")
