@@ -1,5 +1,6 @@
 from retriever import retrieve_from_query
 from generation import generate_with_retrieval
+from config import INDEX_NAME
 
 def main():
     user_prompt = input("User prompt: ")
@@ -17,3 +18,5 @@ def main():
     )
 
     print(generation)
+
+main()
