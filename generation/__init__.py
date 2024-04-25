@@ -42,6 +42,7 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
         If you respond with a list, table, code, or any special formatting, use Markdown.
     '''
 
+    print("Building generation with context")
     completion = oai.chat.completions.create(
         model="gpt-4-turbo",
         messages=[

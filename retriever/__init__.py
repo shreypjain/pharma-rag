@@ -1,6 +1,6 @@
+import json
 from config import oai, pc
 from generation import create_completions
-from scraping import read_section_name_set
 
 INTENT_CLASSIFICATION_SYSTEM_PROMPT = """
 As a Large Language Model, your exclusive task is to perform intent classification on the given text. You are to scrutinize the content and context thoroughly, and categorize it exclusively into the options I will provide. 
@@ -12,6 +12,14 @@ YOUR OUTPUT SHOULD ONLY BE ONE OF THE FOLLOWING OPTIONS. REFRAIN FROM GENERATING
 Do not add any notes in parenthesis. Do not mention latest information. Do not talk about what else you know. Do not ask how else you can help. Do not ask for new data or reports. ONLY generate one of the following strings:
 
 """
+
+def read_section_name_set():
+    with open("./scraping/section_name_set.json", "r") as f:
+        section_names = list(json.load(f))
+        if isinstance(section_names, list):
+            return section_names
+        else:
+            raise Exception("Can't use a none list as section_names")
 
 def create_embeddings(content):
     if not isinstance(content, list):
@@ -36,23 +44,35 @@ def _create_intent_classification_prompt(options):
 def intent_classification(prompt, options, *args, **kwargs):
     system_prompt = _create_intent_classification_prompt(options)
 
-    classified_option = create_completions(prompt, system_prompt)
+    print("Creating intent classification for the first go")
 
-    while classified_option not in options:
-        classified_option = create_completions(prompt, system_prompt)
+    try:
+        classified_option = create_completions(prompt, system_prompt).content
+
+        print(classified_option)
+
+        while classified_option not in options:
+            print("Creating intent classification again")
+            classified_option = create_completions(prompt, system_prompt).content
+    except Exception as e:
+        raise e
     
     return classified_option
 
 def retrieve_from_query(user_prompt, index_name, *args, **kwargs):
     index = pc.Index(index_name)
 
+    print("Creating Query Embeddings")
+
     query_embeddings = create_embeddings(
         user_prompt
-    )
+    )[0].embedding
 
-    # TODO: Replace blank array with full vocab set
+    print("Doing intent classification")
+
     section_name = intent_classification(user_prompt, read_section_name_set())
 
+    print("Querying top k documents")
     retrievals = index.query(
         vector=query_embeddings,
         top_k=5,

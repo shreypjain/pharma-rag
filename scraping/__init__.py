@@ -8,21 +8,13 @@ from retriever import create_embeddings
 from retriever.vdb import create_pc_index, insert_embedding
 
 nltk.download('punkt')
-
-def read_section_name_set():
-    with open("section_name_set.json", "r") as f:
-        section_names = json.load(f)
-        if isinstance(section_names, list):
-            return list(set(json.load(f)))
-        else:
-            raise Exception("Can't use a none list as section_names")
         
 def write_section_name_set(new_section_names):
     # Get rid of duplicates
     new_section_names = list(set(new_section_names))
 
-    with open("section_name_set.json", "r+") as f:
-        section_names = set(json.load(f))
+    with open("./scraping/section_name_set.json", "r+") as f:
+        section_names = list(json.load(f))
 
         if section_names == new_section_names:
             return
@@ -30,7 +22,7 @@ def write_section_name_set(new_section_names):
         if not isinstance(new_section_names, list):
             return
         
-        json.dumps(new_section_names, f)
+        json.dump(new_section_names, f)
 
 def _split_into_sentences(paragraph):
     sentences = sent_tokenize(paragraph)

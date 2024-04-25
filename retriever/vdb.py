@@ -1,5 +1,6 @@
 from pinecone import ServerlessSpec
-from config import pc, INDEX_NAME
+from config import pc
+import uuid
 
 def create_pc_index(name):
     pc.create_index(
