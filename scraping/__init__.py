@@ -10,6 +10,8 @@ from retriever.vdb import create_pc_index, insert_embedding
 
 nltk.download('punkt')
 encoding = tiktoken.get_encoding("cl100k_base")
+
+extract_alpha_chars = lambda text: ' '.join(re.findall(r'[a-zA-Z]+', text))
         
 def write_section_name_set(new_section_names):
     # Get rid of duplicates
@@ -78,7 +80,7 @@ def scrape_drug(id):
             # Check if a <ul> element is found
             if nested_ul:
                 for idx, li in enumerate(lis, start=1):
-                    header = li.find(id=f"anch_dj_dj-dj_{idx}").get_text(strip=True)
+                    header = extract_alpha_chars(li.find(id=f"anch_dj_dj-dj_{idx}").get_text(strip=True))
                     content = li.find(class_=re.compile("toggle-content")).get_text(strip=True)
 
                     section_names.append(header)

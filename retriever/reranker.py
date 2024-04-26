@@ -27,7 +27,6 @@ Do not use any letters or words in your generation, only use numbers and commas,
 def _convert_to_list_ints(input_string):
     return [int(num) for num in input_string.split(',')]
 
-
 def validate_and_convert(input_string):
     pattern = r'^\d+(,\d+)*$'
 
@@ -52,19 +51,21 @@ def reorder_retrievals(retrievals, reranked_index_list):
     return reordered_retrievals
 
 def create_rerank_completion(prompt, temperature, *args, **kwargs):
-    completion = oai.completions.create(
+    completion = oai.chat.completions.create(
         model="gpt-4-turbo",
-        prompt=prompt,
-        temperature=temperature
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=temperature,
         *args,
         **kwargs
     )
 
-    return completion.choices[0].text
+    return completion.choices[0].message.content
 
 
 def rerank_retrievals(query, retrievals, *args, **kwargs):
-    prompt = RERANK_PROMPT(query, retrievals, kwargs["extra_information"])
+    prompt = RERANK_PROMPT(query, retrievals)
 
     raw_indices = create_rerank_completion(prompt, 0.05, *args, **kwargs)
 
@@ -76,6 +77,3 @@ def rerank_retrievals(query, retrievals, *args, **kwargs):
     reranked_retrievals = reorder_retrievals(retrievals, reranked_indices)
 
     return reranked_retrievals
-
-
-

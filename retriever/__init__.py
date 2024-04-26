@@ -1,6 +1,10 @@
 import json
 from config import oai, pc
 from generation import create_completions
+from retriever.reranker import rerank_retrievals
+import re
+
+extract_alpha_chars = lambda text: ' '.join(re.findall(r'[a-zA-Z]+', text))
 
 INTENT_CLASSIFICATION_SYSTEM_PROMPT = """
 As a Large Language Model, your exclusive task is to perform intent classification on the given text. You are to scrutinize the content and context thoroughly, and categorize it exclusively into the options I will provide. 
@@ -85,9 +89,10 @@ def retrieve_from_query(user_prompt, index_name, *args, **kwargs):
         top_k=5,
         include_values=True,
         include_metadata=True,
-        filter={"section_name": { "$eq": section_name }}
+        filter={"section_name": { "$eq": extract_alpha_chars(section_name) }}
     )
+    chunks = retrievals.matches
 
-    # TODO: Set up a reranking step
+    reranked_retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks])
 
-    return retrievals.matches
+    return reranked_retrievals

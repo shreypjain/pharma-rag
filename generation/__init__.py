@@ -17,7 +17,7 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
     context = ''
 
     for ret in retrievals:
-        context += ret["metadata"]["text"]
+        context += ret
         context += "\n\n"
 
     system_prompt = f'''
@@ -32,7 +32,7 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
     '''
 
     user_prompt_with_context = f'''
-        Here is information that may be helpful in answering the user's questions. Always try to use the latest information among the choices:
+        Here is information that may be helpful in answering the user's questions. Always try to use the latest information among the choices and the choices are ordered by most relevant to least relevant. All choices should aid in answer generation:
 
         {context if len(context) > 0 else "There is no relevant content useful for the current generation. Please use information you already have to generate an answer that follows the above criteria"}
         

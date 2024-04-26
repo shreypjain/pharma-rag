@@ -1,13 +1,11 @@
 from retriever import retrieve_from_query
 from generation import generate_with_retrieval
 from config import INDEX_NAME
-from scraping import chunk, write_to_json
-from scraping.pull_product_lists import parse_drug_classes, read_drugs_from_file
 
-def main():
+import gradio as gr
+
+def main(user_prompt):
     try:
-        user_prompt = input("User prompt: ")
-
         print("Doing retrieval")
 
         retrievals = retrieve_from_query(
@@ -24,17 +22,25 @@ def main():
             max_tokens=4096
         )
 
-        print("\n" + generation.content)
+        return generation.content
     except Exception as e:
         raise e
 
 # chunk(INDEX_NAME, "product_name", "bdbf5ad4-86f2-4e9c-a51a-fb0c7220c480")
 
-all_drugs = read_drugs_from_file("./scraping/drug_list.txt")
+# all_drugs = read_drugs_from_file("./scraping/drug_list.txt")
 
-for drug in all_drugs:
-    product_name, product_id = drug
+# for drug in all_drugs:
+#     product_name, product_id = drug
 
-    write_to_json(product_name, product_id)
+#     write_to_json(product_name, product_id)
     # chunk(INDEX_NAME, product_name, product_id)
+
+interface = gr.Interface(
+    fn=main,
+    inputs=["text"],
+    outputs=["text"]
+)
+
+interface.launch(share=True)
 
