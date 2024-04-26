@@ -17,9 +17,10 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
     context = ''
 
     for ret in retrievals:
-        print(ret)
+        print(f"{ret[1]}: {ret[0]}")
         print("\n\n")
-        context += ret
+
+        context += f"{ret[1]}: {ret[0]}"
         context += "\n\n"
 
     system_prompt = f'''
@@ -34,7 +35,9 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
     '''
 
     user_prompt_with_context = f'''
-        Here is information that may be helpful in answering the user's questions. Always try to use the latest information among the choices and the choices are ordered by most relevant to least relevant. All choices should aid in answer generation:
+        Here is information that may be helpful in answering the user's questions. Always try to use the latest information among the choices and the choices are ordered by most relevant to least relevant. They will be in the following format and should aid with answer generation:
+
+        [DRUG_NAME]: [RELEVANT_DRUG_INFORMATION]
 
         {context if len(context) > 0 else "There is no relevant content useful for the current generation. Please use information you already have to generate an answer that follows the above criteria"}
         

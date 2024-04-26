@@ -171,7 +171,7 @@ def retrieve_from_query(user_prompt, index_name, *args, **kwargs):
 
         print_with_readable_time("Reranking chunks")
 
-        retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks], top_k=3)
+        retrievals = rerank_retrievals(user_prompt, [(chunk["metadata"]["text"], chunk["metadata"]["product_name"]) for chunk in chunks], top_k=3)
 
         return retrievals
     except Exception as e:
