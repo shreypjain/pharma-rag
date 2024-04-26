@@ -17,6 +17,8 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
     context = ''
 
     for ret in retrievals:
+        print(ret)
+        print("\n\n")
         context += ret
         context += "\n\n"
 

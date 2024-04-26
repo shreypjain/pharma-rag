@@ -36,11 +36,11 @@ def main(user_prompt):
 #     write_to_json(product_name, product_id)
     # chunk(INDEX_NAME, product_name, product_id)
 
-interface = gr.Interface(
+demo = gr.Interface(
     fn=main,
     inputs=["text"],
     outputs=["text"]
 )
 
-interface.launch(share=True)
+demo.launch(share=True)
 

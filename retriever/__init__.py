@@ -17,6 +17,13 @@ Do not add any notes in parenthesis. Do not mention latest information. Do not t
 
 """
 
+import datetime
+
+# Function to print with human-readable time
+def print_with_readable_time(message):
+    current_time = datetime.datetime.now()
+    print(f"[{current_time.strftime('%H:%M:%S')}] {message}")
+
 def read_section_name_set():
     with open("./scraping/section_name_set.json", "r") as f:
         section_names = list(json.load(f)["sections"])
@@ -26,6 +33,8 @@ def read_section_name_set():
             raise Exception("Can't use a none list as section_names")
 
 def create_embeddings(content):
+    if isinstance(content, str) and content == '':
+        return []
     if not isinstance(content, list):
         content = [content]
     if not len(content):
@@ -70,29 +79,101 @@ def intent_classification(prompt, options, *args, **kwargs):
     
     return classified_option
 
+def _lev_dist(s1, s2):
+    distances = [[0] * (len(s2) + 1) for _ in range(len(s1) + 1)]
+
+    for i in range(len(s1) + 1):
+        distances[i][0] = i
+    for j in range(len(s2) + 1):
+        distances[0][j] = j
+
+    for i in range(1, len(s1) + 1):
+        for j in range(1, len(s2) + 1):
+            if s1[i - 1] == s2[j - 1]:
+                substitution_cost = 0
+            else:
+                substitution_cost = 1
+            distances[i][j] = min(
+                distances[i - 1][j] + 1,  # deletion
+                distances[i][j - 1] + 1,  # insertion
+                distances[i - 1][j - 1] + substitution_cost  # substitution
+            )
+
+    return distances[-1][-1]
+
+def filter_retrievals_by_lev_distance(retrievals):
+    filtered_retrievals = []
+
+    try:
+        for i in range(len(retrievals)):
+            retrieval_i = retrievals[i]
+            text_i = retrieval_i
+
+            print('here')
+            
+            is_unique = True
+            
+            for j in range(i + 1, len(retrievals)):
+                retrieval_j = retrievals[j]
+                text_j = retrieval_j
+                
+                levenshtein_distance = _lev_dist(text_i, text_j)
+                text_length = max(len(text_i), len(text_j))
+                lev_ratio = levenshtein_distance / text_length
+
+                print('HERE')
+                
+                # Check if the ratio exceeds the threshold
+                if lev_ratio <= 0.06:
+                    is_unique = False
+                    break
+            
+            if is_unique:
+                filtered_retrievals.append(retrieval_i)
+    except Exception as e:
+        raise e
+        
+    return filtered_retrievals
+
 def retrieve_from_query(user_prompt, index_name, *args, **kwargs):
     index = pc.Index(index_name)
 
-    print("Creating Query Embeddings")
+    print_with_readable_time("Creating Query Embeddings")
 
-    query_embeddings = create_embeddings(
-        user_prompt
-    )[0].embedding
+    try:
+        query_embeddings = create_embeddings(
+            user_prompt
+        )[0].embedding
+    except Exception as e:
+        raise e
 
-    print("Doing intent classification")
+    print_with_readable_time("Doing intent classification")
 
     section_name = intent_classification(user_prompt, read_section_name_set())
 
-    print("Querying top k documents")
-    retrievals = index.query(
-        vector=query_embeddings,
-        top_k=5,
-        include_values=True,
-        include_metadata=True,
-        filter={"section_name": { "$eq": extract_alpha_chars(section_name) }}
-    )
-    chunks = retrievals.matches
+    print_with_readable_time("Querying top k documents")
+    try:
+        retrievals = index.query(
+            vector=query_embeddings,
+            top_k=5,
+            include_values=True,
+            include_metadata=True,
+            # TODO: add filtration by product_name
+            # filter={"section_name": { "$eq": extract_alpha_chars(section_name) }}
+        )
 
-    reranked_retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks], top_k=3)
+        chunks = retrievals.matches
 
-    return reranked_retrievals
+        print_with_readable_time(chunks[0]["metadata"])
+
+        # FAILED experiment – took way too long to actually run through lev_distance (n^4 time)
+        # retrievals = filter_retrievals_by_lev_distance([chunk["metadata"]["text"] for chunk in chunks])
+
+        print_with_readable_time("Reranking chunks")
+
+        retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks], top_k=3)
+
+        return retrievals
+    except Exception as e:
+        print("Issue with the user prompt: ", user_prompt)
+        raise e
