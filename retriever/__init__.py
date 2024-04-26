@@ -93,6 +93,6 @@ def retrieve_from_query(user_prompt, index_name, *args, **kwargs):
     )
     chunks = retrievals.matches
 
-    reranked_retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks])
+    reranked_retrievals = rerank_retrievals(user_prompt, [chunk["metadata"]["text"] for chunk in chunks], top_k=3)
 
     return reranked_retrievals

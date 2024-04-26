@@ -64,7 +64,7 @@ def create_rerank_completion(prompt, temperature, *args, **kwargs):
     return completion.choices[0].message.content
 
 
-def rerank_retrievals(query, retrievals, *args, **kwargs):
+def rerank_retrievals(query, retrievals, top_k = 3, *args, **kwargs):
     prompt = RERANK_PROMPT(query, retrievals)
 
     raw_indices = create_rerank_completion(prompt, 0.05, *args, **kwargs)
@@ -76,4 +76,4 @@ def rerank_retrievals(query, retrievals, *args, **kwargs):
 
     reranked_retrievals = reorder_retrievals(retrievals, reranked_indices)
 
-    return reranked_retrievals
+    return reranked_retrievals[:top_k]
