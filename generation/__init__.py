@@ -45,6 +45,8 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
 
         If you aren't able to answer the query effectively, truthfully, or factually, respond by saying you don't have any relevant information and don't say anything else. End your response after saying you don't know. Do not add any notes in parenthesis. Do not mention latest information. Do not talk about what else you know. Do not ask how else you can help. Do not ask for new data or reports.
         If you respond with a list, table, code, or any special formatting, use Markdown.
+
+        User query:
     '''
 
     print("Building generation with context")
@@ -52,7 +54,7 @@ def generate_with_retrieval(retrievals, user_prompt, *args, **kwargs):
         model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt_with_context}
+            {"role": "user", "content": user_prompt_with_context + user_prompt}
         ],
         *args,
         **kwargs,

@@ -10,7 +10,7 @@ The following are pieces of information about drug products related to query: { 
 {
     ''.join(
         [
-            f"[{idx}]: {chunk}" for idx, chunk in enumerate(chunks)
+            f"[{idx}]: {chunk}" for idx, chunk in enumerate(chunks, start=1)
         ]
     )
 }
@@ -25,7 +25,7 @@ Do not use any letters or words in your generation, only use numbers and commas,
 '''
 
 def _convert_to_list_ints(input_string):
-    return [int(num) for num in input_string.split(',')]
+    return [int(num) - 1 for num in input_string.split(',')]
 
 def validate_and_convert(input_string):
     pattern = r'^\d+(,\d+)*$'
